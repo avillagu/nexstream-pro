@@ -438,27 +438,21 @@
     const download = () => {
       const url = urlInput.value.trim();
       const isValid = validateUrl(url);
-      if (!isValid) return setError('URL inv?lida. Analiza primero.');
+      if (!isValid) return setError('URL inválida. Analiza primero.');
 
-      // Descarga directa para evitar cargar el blob completo en memoria (mejor en m?viles)
+      // Descarga directa via window.open para máxima compatibilidad
       setDownloadState('preparing');
       const downloadUrl = `${API_BASE}/api/download?url=${encodeURIComponent(url)}`;
 
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.download = `${titleEl.textContent || 'video'}.mp4`;
-      document.body.appendChild(link);
-
       setDownloadState('downloading');
-      link.click();
+      
+      // Usar window.open para que el navegador maneje la descarga nativamente
+      window.open(downloadUrl, '_blank');
 
-      // Limpieza r?pida y retorno al estado listo sin esperar al cierre de la pesta?a
-      requestAnimationFrame(() => {
-        link.remove();
+      // Retornar al estado idle después de un momento
+      setTimeout(() => {
         setDownloadState('idle');
-      });
+      }, 3000);
     };
 
     urlInput.addEventListener('input', (e) => {
