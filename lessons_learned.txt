@@ -117,6 +117,31 @@ ERROR #8: DESCARGA VÍA BLOB (ORIGINAL) — RIESGO DE COLAPSO EN MÓVILES
 - PREVENCIÓN: NUNCA usar blob() para archivos multimedia grandes. Siempre
   delegar la descarga al navegador nativamente.
 
+ERROR #9: FFMPEG SIN ARCHIVO DE SALIDA — BUG CRÍTICO DE LÓGICA
+────────────────────────────────────────────────────────────────
+- QUÉ PASÓ: Los argumentos de ffmpeg terminaban en `-y` sin especificar el
+  archivo de salida (tempFile). ffmpeg no sabía dónde escribir el resultado.
+- IMPACTO: El endpoint /api/download respondía con error 500 o no generaba
+  ningún archivo. La descarga nunca funcionó hasta que se corrigió esto.
+- CAUSA RAÍZ: El Agente Backend separó los args de ffmpeg como constante global
+  incompleta. El Senior aprobó sin verificar que la lógica de spawn era correcta.
+- PREVENCIÓN: Construir los argumentos de ffmpeg como función que recibe el
+  archivo de salida: `buildFfmpegArgs(outputFile)`. Nunca dejar args incompletos.
+  REGLA: Todo `spawn()` que escriba a archivo debe tener el destino verificado.
+
+ERROR #10: RE-CODIFICACIÓN INNECESARIA — IMPACTO EN VELOCIDAD
+──────────────────────────────────────────────────────────────
+- QUÉ PASÓ: El backend re-codificaba cada video a h264/aac desde cero usando
+  libx264, incluso cuando el video ya venía en ese formato desde la plataforma.
+- IMPACTO: Descargas lentas. Un video de 3 minutos podía tardar varios minutos
+  en procesarse en el servidor gratuito de Render con CPU limitada.
+- CAUSA RAÍZ: El Agente Backend implementó el pipeline más seguro (re-encode
+  completo) sin evaluar si era necesario. El Senior no cuestionó el enfoque.
+- SOLUCIÓN APLICADA: Cambiar a `-c:v copy -c:a copy` con solo `-movflags +faststart`.
+  Esto es un remux (sin re-codificación): 10-50x más rápido, calidad original.
+- PREVENCIÓN: Para descarga de video, SIEMPRE intentar copy primero. Solo
+  re-encodear si el formato fuente es incompatible con el destino requerido.
+
 ================================================================================
 AUTOCRÍTICA DEL AGENTE SENIOR
 ================================================================================
@@ -179,21 +204,52 @@ Todo mecanismo de descarga de archivos debe probarse end-to-end antes de
 aprobarse. El patrón recomendado es window.open() para archivos servidos
 desde endpoints API. Prohibido usar blob() para archivos multimedia grandes.
 
+REGLA 8 — ARGUMENTOS COMPLETOS EN SPAWN:
+Todo llamado a spawn() con ffmpeg (u otro procesador de archivos) debe
+incluir OBLIGATORIAMENTE el archivo de salida como argumento. El Senior debe
+verificar que stdin → proceso → stdout/archivo esté correctamente cableado.
+
+REGLA 9 — COPY ANTES QUE RE-ENCODE:
+Para pipelines de video, usar siempre `-c copy` como primera estrategia.
+Solo escalar a re-codificación completa si el formato fuente es incompatible.
+Esto reduce el tiempo de proceso de minutos a segundos en servidores gratuitos.
+
 ================================================================================
 MÉTRICAS DE IMPACTO
 ================================================================================
-- Commits de corrección necesarios: 4 (deberían haber sido 0)
+- Commits de corrección necesarios: 6 (deberían haber sido 0)
 - Ciclos de despliegue fallidos: 3
-- Tiempo perdido en correcciones: ~45 minutos
+- Tiempo perdido en correcciones: ~90 minutos
 - Confianza del Director afectada: SÍ
-- Errores que debieron detectarse en revisión de código: 8 de 8 (100%)
+- Errores que debieron detectarse en revisión de código: 10 de 10 (100%)
+- Errores de lógica críticos no detectados por el Senior: 2 (#4 y #9)
 
 ================================================================================
 COMPROMISO
 ================================================================================
-Como Agente Senior, me comprometo a implementar las 7 nuevas reglas documentadas
+Como Agente Senior, me comprometo a implementar las 9 nuevas reglas documentadas
 arriba en todos los proyectos futuros del sistema MAPO. Ningún proyecto será
 declarado "Aprobado" sin evidencia verificable de funcionamiento.
 
 Firmado: Agente Senior — MAPO
 Fecha: 2026-03-18
+
+================================================================================
+CIERRE OFICIAL DEL PROYECTO
+================================================================================
+ESTATUS FINAL: ✅ COMPLETADO Y FUNCIONANDO
+FECHA DE CIERRE: 2026-03-18 20:30
+URL DE PRODUCCIÓN: https://nexstream-pro.onrender.com
+REPOSITORIO: https://github.com/avillagu/nexstream-pro
+
+RESULTADO FINAL:
+- Descarga de videos desde YouTube, Facebook, Instagram y TikTok: ✅
+- Formato MP4 compatible con WhatsApp (faststart): ✅
+- Velocidad de descarga: RÁPIDA (remux sin re-codificación): ✅
+- Diseño Premium con glassmorphism y animaciones: ✅
+- Frontend servido desde el mismo servidor (monolito): ✅
+- Presupuesto: $0 (Render Free + GitHub gratuito): ✅
+- Fecha de entrega: Mismo día (18 de marzo de 2026): ✅
+
+Aprobado por el Director: Alejandro Villa
+Aprobado por el Senior: Agente MAPO
