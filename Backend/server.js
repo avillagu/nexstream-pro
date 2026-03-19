@@ -11,6 +11,12 @@ const PORT = process.env.PORT || 3000;
 // Enable CORS for development
 app.use(cors());
 
+// Serve Frontend static files
+const FRONTEND_DIR = path.join(__dirname, 'public');
+if (fs.existsSync(FRONTEND_DIR)) {
+  app.use(express.static(FRONTEND_DIR));
+}
+
 // Temp directory for downloads
 const TEMP_DIR = path.join(__dirname, 'temp');
 
@@ -234,8 +240,8 @@ app.get('/api/download', (req, res) => {
     url
   ]);
 
-  // Start ffmpeg to transcode (using absolute path if necessary)
-  const FFMPEG_BIN = 'ffmpeg';
+  // Start ffmpeg to transcode (use absolute path for Docker/Alpine Linux)
+  const FFMPEG_BIN = process.env.FFMPEG_PATH || '/usr/bin/ffmpeg';
   ffmpeg = spawn(FFMPEG_BIN, FFMPEG_ARGS);
 
   // Pipe yt-dlp stdout to ffmpeg stdin

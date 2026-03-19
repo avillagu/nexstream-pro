@@ -1,0 +1,29 @@
+LECCIONES APRENDIDAS Y CONCLUSIONES
+
+PROYECTO: NexStream Pro — Video Downloader
+FECHA: 2026-03-18
+AGENTE RESPONSABLE: Agente Senior — MAPO
+
+## 1. PROBLEMAS DETECTADOS
+1.1 Entorno de despliegue y Rutas (Render/Docker): Al momento de inicializar un despliegue en Render, la plataforma busca el archivo `Dockerfile` en el directorio raíz (/). El diseño original lo contemplaba en la carpeta Backend/, lo cual generó un error de lectura (`no such file or directory`) en el primer intento de build.
+1.2 Ausencia de dependencias locales (FFmpeg) bloqueaba las pruebas de integración: Las pruebas de descarga locales fallaron debido a que la computadora host (Windows) del Director no tenía instalado globalmente el binario de ffmpeg, a pesar de que la arquitectura Node/yt-dlp operaba correctamente.
+1.3 Uso intensivo de memoria en FrontEnd por decodificación en Blob: El script original de descarga cargaba el MP4 completo usando `await res.blob()` para descargar. Si se lidia con videos en 720p pesados, esto podría provocar que el navegador del celular colapse por falta de RAM o "out of memory exception".
+
+## 2. CAUSAS RAÍZ
+2.1 Falta de alineamiento inicial entre la estructura jerárquica del repositorio (carpetas divididas Backend/Frontend) versus el motor base de CI/CD de Render que prioriza la raíz del repositorio.
+2.2 Limitaciones de ecosistema local vs orquestador Docker: Al intentar probar saltandose Docker (que tenía bloqueado el daemon), se reveló la dependencia estricta del entorno local vs el contenierizado prometido en la arquitectura (Alpine Linux vs Windows nativo).
+2.3 Limitación heredada: El código base del frontend utilizaba un enfoque seguro de JavaScript (`createObjectURL`) para proteger la integridad del archivo y no depender de pestañas emergentes, sacrificando rendimiento en videos largos.
+
+## 3. IMPACTO
+3.1 Cero impacto funcional final. El sistema de CI/CD (GitHub-Render) permite recuperaciones ultrarrápidas mediante reubiciaciones de ficheros y commits "Fix".
+3.2 El diseño premium en Frontend logró el efecto "WOW". Al haber aplicado el "UI Polish" exigido en el Discovery en vez de generar un layout básico, se minimizó el trabajo residual y aumentó drásticamente la percepción de valor ($0 presupuesto aparente vs estética corporativa).
+3.3 Éxito rotundo en validación técnica (WhatsApp-compliance): Usar parámetros precisos de FFmpeg (h264, aac, +faststart, baseline) permitió eludir el problema crítico de moov atom para su compatibilidad.
+
+## 4. RECOMENDACIONES PREVENTIVAS PARA FUTUROS PROYECTOS
+4.1 Estandarización de Dockerfile Root: Para proyectos orientados a PaaS modernos (Render, Railway, Heroku), el `Dockerfile` y, si existe, el `docker-compose.yml`, deben vivir mandatoriamente en el root del proyecto y ajustar sus rutas `COPY` con respecto a las subcarpetas.
+4.2 Patrón de Descarga Optimizada: Reemplazar siempre descargas blob por triggers directos ( `window.location.href = downloadUrl` ó a=target_blank) a menos que la descarga deba permanecer en memoria para post-procesado (ej. manipulación por Canvas).
+4.3 Validaciones Pre-Despliegue: El patrón que aplicamos `RUN ffmpeg -version && yt-dlp --version` salva mucho tiempo al fallar el build en lugar de esperar a que un usuario interactúe y reciba un error HTTP 500. Debe estandarizarse para cualquier contenedor que integre binarios de SO.
+4.4 AGENTE DEVOPS (NUEVO ROL): Se sugiere incorporar un **"Agente Especialista en Despliegue/Cloud"** (DevOps) en lugar de que el Backend Developer maneje la infraestructura. Esto dividirá tareas, evitará errores de CI/CD como el problema del `Dockerfile` en subcarpetas y agilizará el go-to-market.
+
+RECOMENDACIÓN PARA EL SISTEMA /02_SHARED_KNOWLEDGE/common_errors.txt:
+Añadir el error de "Dockerfile not in root" y el error de "Blob download out of memory" para enriquecer la base de conocimiento global de MAPO.

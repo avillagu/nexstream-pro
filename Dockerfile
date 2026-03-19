@@ -12,8 +12,8 @@ RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o 
     chmod a+rx /usr/local/bin/yt-dlp && \
     ln -sf /usr/local/bin/yt-dlp /usr/bin/yt-dlp
 
-# Verify installations
-RUN ffmpeg -version && yt-dlp --version
+# Verify installations and print paths
+RUN which ffmpeg && ffmpeg -version && which yt-dlp && yt-dlp --version
 
 # Set working directory
 WORKDIR /app
@@ -27,6 +27,10 @@ RUN npm install --production
 # Copy application code
 COPY Backend/server.js ./
 
+# Copy Frontend into public/ so Express can serve it
+RUN mkdir -p /app/public
+COPY Frontend/index.html /app/public/index.html
+
 # Create temp directory
 RUN mkdir -p /app/temp
 
@@ -36,6 +40,7 @@ EXPOSE 3000
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV FFMPEG_PATH=/usr/bin/ffmpeg
 
 # Start the server
 CMD ["node", "server.js"]

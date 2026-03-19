@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -325,7 +325,10 @@
   </div>
 
   <script>
-    const API_BASE = 'http://localhost:3000'; // Cambiar a URL de Render en producción
+    // Auto-detect API base: if served from Render use relative path, otherwise use Render URL
+    const API_BASE = window.location.protocol === 'file:'
+      ? 'https://nexstream-pro.onrender.com'
+      : '';
 
     const urlInput = document.getElementById('urlInput');
     const analyzeBtn = document.getElementById('analyzeBtn');
