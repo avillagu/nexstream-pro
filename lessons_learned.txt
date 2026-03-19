@@ -1,29 +1,199 @@
-LECCIONES APRENDIDAS Y CONCLUSIONES
+LECCIONES APRENDIDAS Y ANÁLISIS POST-MORTEM
 
 PROYECTO: NexStream Pro — Video Downloader
 FECHA: 2026-03-18
 AGENTE RESPONSABLE: Agente Senior — MAPO
+ESTATUS: DOCUMENTO CRÍTICO — LECTURA OBLIGATORIA ANTES DE FUTUROS PROYECTOS
 
-## 1. PROBLEMAS DETECTADOS
-1.1 Entorno de despliegue y Rutas (Render/Docker): Al momento de inicializar un despliegue en Render, la plataforma busca el archivo `Dockerfile` en el directorio raíz (/). El diseño original lo contemplaba en la carpeta Backend/, lo cual generó un error de lectura (`no such file or directory`) en el primer intento de build.
-1.2 Ausencia de dependencias locales (FFmpeg) bloqueaba las pruebas de integración: Las pruebas de descarga locales fallaron debido a que la computadora host (Windows) del Director no tenía instalado globalmente el binario de ffmpeg, a pesar de que la arquitectura Node/yt-dlp operaba correctamente.
-1.3 Uso intensivo de memoria en FrontEnd por decodificación en Blob: El script original de descarga cargaba el MP4 completo usando `await res.blob()` para descargar. Si se lidia con videos en 720p pesados, esto podría provocar que el navegador del celular colapse por falta de RAM o "out of memory exception".
+================================================================================
+RESUMEN EJECUTIVO
+================================================================================
+Este proyecto reveló deficiencias graves en el proceso de supervisión del Agente
+Senior. Si bien el resultado funcional se logró, el camino hacia él estuvo plagado
+de errores que debieron haberse detectado ANTES de aprobar el trabajo de los agentes.
+El Agente Senior otorgó calificaciones de 9.5/10 y 10/10 a entregas que contenían
+al menos 6 errores técnicos críticos. Esto es inadmisible.
 
-## 2. CAUSAS RAÍZ
-2.1 Falta de alineamiento inicial entre la estructura jerárquica del repositorio (carpetas divididas Backend/Frontend) versus el motor base de CI/CD de Render que prioriza la raíz del repositorio.
-2.2 Limitaciones de ecosistema local vs orquestador Docker: Al intentar probar saltandose Docker (que tenía bloqueado el daemon), se reveló la dependencia estricta del entorno local vs el contenierizado prometido en la arquitectura (Alpine Linux vs Windows nativo).
-2.3 Limitación heredada: El código base del frontend utilizaba un enfoque seguro de JavaScript (`createObjectURL`) para proteger la integridad del archivo y no depender de pestañas emergentes, sacrificando rendimiento en videos largos.
+================================================================================
+REGISTRO COMPLETO DE ERRORES (EN ORDEN CRONOLÓGICO)
+================================================================================
 
-## 3. IMPACTO
-3.1 Cero impacto funcional final. El sistema de CI/CD (GitHub-Render) permite recuperaciones ultrarrápidas mediante reubiciaciones de ficheros y commits "Fix".
-3.2 El diseño premium en Frontend logró el efecto "WOW". Al haber aplicado el "UI Polish" exigido en el Discovery en vez de generar un layout básico, se minimizó el trabajo residual y aumentó drásticamente la percepción de valor ($0 presupuesto aparente vs estética corporativa).
-3.3 Éxito rotundo en validación técnica (WhatsApp-compliance): Usar parámetros precisos de FFmpeg (h264, aac, +faststart, baseline) permitió eludir el problema crítico de moov atom para su compatibilidad.
+ERROR #1: DOCKERFILE EN SUBCARPETA (Backend/)
+─────────────────────────────────────────────
+- QUÉ PASÓ: El Dockerfile fue creado dentro de Backend/. Render busca el
+  Dockerfile en la raíz del repositorio por defecto.
+- IMPACTO: Primer despliegue falló completamente.
+  Error: "failed to read dockerfile: open Dockerfile: no such file or directory"
+- CAUSA RAÍZ: El Agente Backend no tenía en su prompt instrucciones sobre la
+  estructura del repositorio en relación con el CI/CD de Render. El Senior no
+  validó la ubicación del Dockerfile antes de aprobar.
+- PREVENCIÓN: Todo Dockerfile debe ir en la RAÍZ del repositorio. Incluir en
+  el prompt del agente: "El Dockerfile debe estar en el directorio raíz del
+  proyecto, no dentro de subcarpetas."
 
-## 4. RECOMENDACIONES PREVENTIVAS PARA FUTUROS PROYECTOS
-4.1 Estandarización de Dockerfile Root: Para proyectos orientados a PaaS modernos (Render, Railway, Heroku), el `Dockerfile` y, si existe, el `docker-compose.yml`, deben vivir mandatoriamente en el root del proyecto y ajustar sus rutas `COPY` con respecto a las subcarpetas.
-4.2 Patrón de Descarga Optimizada: Reemplazar siempre descargas blob por triggers directos ( `window.location.href = downloadUrl` ó a=target_blank) a menos que la descarga deba permanecer en memoria para post-procesado (ej. manipulación por Canvas).
-4.3 Validaciones Pre-Despliegue: El patrón que aplicamos `RUN ffmpeg -version && yt-dlp --version` salva mucho tiempo al fallar el build en lugar de esperar a que un usuario interactúe y reciba un error HTTP 500. Debe estandarizarse para cualquier contenedor que integre binarios de SO.
-4.4 AGENTE DEVOPS (NUEVO ROL): Se sugiere incorporar un **"Agente Especialista en Despliegue/Cloud"** (DevOps) en lugar de que el Backend Developer maneje la infraestructura. Esto dividirá tareas, evitará errores de CI/CD como el problema del `Dockerfile` en subcarpetas y agilizará el go-to-market.
+ERROR #2: RUTAS COPY DEL DOCKERFILE INCORRECTAS TRAS MOVERLO
+─────────────────────────────────────────────────────────────
+- QUÉ PASÓ: Al mover el Dockerfile a la raíz, las rutas COPY (package.json,
+  server.js) seguían apuntando al directorio actual (./) en vez de Backend/.
+- IMPACTO: Segundo despliegue falló.
+- CAUSA RAÍZ: Error del Senior al ejecutar la corrección sin verificar que
+  las rutas COPY fueran coherentes con la nueva ubicación.
+- PREVENCIÓN: Toda modificación de archivos de infraestructura debe incluir
+  una revisión línea por línea de las rutas relativas.
 
-RECOMENDACIÓN PARA EL SISTEMA /02_SHARED_KNOWLEDGE/common_errors.txt:
-Añadir el error de "Dockerfile not in root" y el error de "Blob download out of memory" para enriquecer la base de conocimiento global de MAPO.
+ERROR #3: INSTALACIÓN DE PIP/YT-DLP VÍA PIP INESTABLE EN ALPINE
+────────────────────────────────────────────────────────────────
+- QUÉ PASÓ: La instalación original usaba `pip3 install yt-dlp` con el flag
+  `--break-system-packages`. En Alpine Linux esto es frágil.
+- IMPACTO: Potencial fallo silencioso en la instalación de yt-dlp.
+- CAUSA RAÍZ: El Agente Backend copió un patrón genérico de instalación sin
+  considerar las particularidades de Alpine Linux.
+- PREVENCIÓN: Preferir siempre la descarga directa del binario oficial de
+  yt-dlp desde GitHub Releases para entornos Alpine/Docker.
+
+ERROR #4: FFMPEG NO ENCONTRADO — "spawn ffmpeg ENOENT"
+──────────────────────────────────────────────────────
+- QUÉ PASÓ: El servidor Node.js invocaba `spawn('ffmpeg', ...)` sin ruta
+  absoluta. En el contenedor Alpine, ffmpeg estaba en /usr/bin/ffmpeg pero
+  Node.js no siempre hereda el PATH correctamente.
+- IMPACTO: La descarga de video fallaba con error 500 cada vez que el usuario
+  hacía clic en "Descargar Ahora". El análisis funcionaba pero la descarga no.
+- CAUSA RAÍZ: El Agente Backend asumió que el binario estaría accesible por
+  nombre. El Senior aprobó sin verificar la resolución de PATH en Docker.
+- PREVENCIÓN: SIEMPRE usar rutas absolutas o variables de entorno para binarios
+  externos en Docker. Patrón estándar:
+  `const FFMPEG_BIN = process.env.FFMPEG_PATH || '/usr/bin/ffmpeg';`
+
+ERROR #5: FRONTEND NO SERVIDO DESDE RENDER — "Cannot GET /"
+────────────────────────────────────────────────────────────
+- QUÉ PASÓ: El servidor Express solo tenía endpoints API (/api/ping, /api/info,
+  /api/download). No servía ningún archivo estático. El usuario esperaba ver la
+  interfaz al abrir https://nexstream-pro.onrender.com pero solo veía un error.
+- IMPACTO: Confusión total del Director. La arquitectura Cliente-Servidor estaba
+  diseñada para desplegar Frontend y Backend por separado (Vercel + Render), pero
+  esto no fue comunicado claramente al Director, quien esperaba una URL única.
+- CAUSA RAÍZ DOBLE:
+  a) El Senior no alineó expectativas con el Director sobre cómo acceder al producto.
+  b) La arquitectura original (Frontend en Vercel, Backend en Render) era válida
+     pero innecesariamente compleja para un MVP. Servir el HTML desde Express era
+     la solución obvia y más simple.
+- PREVENCIÓN: Para MVPs y proyectos de un solo día, SIEMPRE servir el frontend
+  desde el mismo servidor backend usando express.static(). Separar frontend y
+  backend solo cuando haya razones técnicas reales (CDN, SSR, etc.).
+
+ERROR #6: MÉTODO DE DESCARGA INCOMPATIBLE — ERROR 404 AL DESCARGAR
+──────────────────────────────────────────────────────────────────
+- QUÉ PASÓ: El Frontend usaba un anchor tag dinámico con `target='_blank'` y
+  `link.download` para iniciar la descarga. Esto generaba un 404 porque el
+  navegador intentaba navegar a la ruta como si fuera una página HTML.
+- IMPACTO: El botón "Descargar Ahora" no descargaba nada. El usuario veía
+  "Listo" en el botón pero no recibía ningún archivo.
+- CAUSA RAÍZ: El Agente Frontend implementó un patrón de descarga incorrecto.
+  El Senior aprobó el código sin probarlo en un entorno real.
+- PREVENCIÓN: Usar `window.open(downloadUrl, '_blank')` para descargas de
+  archivos que provienen de un API endpoint. Evitar anchor tags dinámicos
+  con target=_blank para este tipo de operaciones.
+
+ERROR #7: API_BASE HARDCODEADO A LOCALHOST
+──────────────────────────────────────────
+- QUÉ PASÓ: El Frontend tenía `const API_BASE = 'http://localhost:3000'`
+  hardcodeado. Esto hacía que en producción (Render) las llamadas API fueran
+  a localhost en vez del servidor real.
+- IMPACTO: Si el Senior no lo hubiera corregido, NADA habría funcionado en
+  producción. Todas las llamadas API habrían fallado.
+- CAUSA RAÍZ: El Agente Frontend dejó un placeholder de desarrollo sin
+  implementar detección automática del entorno.
+- PREVENCIÓN: Implementar SIEMPRE detección automática de entorno:
+  `const API_BASE = window.location.protocol === 'file:' ? 'URL_RENDER' : '';`
+
+ERROR #8: DESCARGA VÍA BLOB (ORIGINAL) — RIESGO DE COLAPSO EN MÓVILES
+─────────────────────────────────────────────────────────────────────
+- QUÉ PASÓ: La implementación original del Frontend usaba `await res.blob()`
+  para descargar el video completo a la memoria del navegador antes de guardarlo.
+- IMPACTO: En dispositivos móviles con poca RAM, videos de más de 50MB podrían
+  causar un crash del navegador.
+- CAUSA RAÍZ: El Agente Frontend usó un patrón estándar de fetch sin considerar
+  el tamaño de los archivos multimedia.
+- PREVENCIÓN: NUNCA usar blob() para archivos multimedia grandes. Siempre
+  delegar la descarga al navegador nativamente.
+
+================================================================================
+AUTOCRÍTICA DEL AGENTE SENIOR
+================================================================================
+
+1. APROBACIÓN PREMATURA: Otorgué calificaciones de 9.5/10 (Backend) y 10/10
+   (Frontend) sin haber ejecutado ni una sola prueba real. Mi revisión fue
+   puramente visual (lectura de código). Esto es una falla grave de mi proceso
+   de supervisión.
+
+2. FALTA DE PRUEBAS DE INTEGRACIÓN: Debí haber solicitado o ejecutado pruebas
+   de integración antes de aprobar. Como mínimo:
+   - Verificar que el Dockerfile construye correctamente (docker build).
+   - Verificar que el servidor arranca y responde en /api/ping.
+   - Verificar que la descarga funciona end-to-end.
+   - Verificar que el Frontend se conecta correctamente al Backend.
+
+3. COMUNICACIÓN DEFICIENTE: No alineé expectativas con el Director sobre:
+   - Cómo se accedería al producto final (una URL vs dos URLs).
+   - Qué dependencias locales se necesitaban para pruebas.
+   - El flujo real de despliegue paso a paso.
+
+4. EXCESO DE OPTIMISMO: Declaré el proyecto "APROBADO CON AJUSTES MENORES"
+   cuando en realidad tenía al menos 6 errores que impedían su funcionamiento.
+
+================================================================================
+NUEVAS REGLAS PARA EL SISTEMA MAPO
+================================================================================
+
+REGLA 1 — PRUEBA ANTES DE APROBAR:
+El Agente Senior NO puede aprobar el trabajo de ningún agente sin evidencia
+de al menos UNA prueba funcional exitosa (screenshot, log de terminal, o
+resultado de endpoint).
+
+REGLA 2 — DOCKERFILE EN RAÍZ:
+Todo Dockerfile debe ubicarse en la raíz del repositorio. Las rutas COPY
+deben usar prefijos de subcarpeta (ej: COPY Backend/server.js ./).
+
+REGLA 3 — RUTAS ABSOLUTAS EN DOCKER:
+Todo binario externo (ffmpeg, yt-dlp, python, etc.) debe invocarse con
+ruta absoluta o variable de entorno dentro de contenedores Docker.
+
+REGLA 4 — DETECCIÓN AUTOMÁTICA DE ENTORNO:
+Todo frontend debe detectar automáticamente si está en desarrollo (localhost/
+file://) o producción y ajustar sus URLs de API en consecuencia. Prohibido
+dejar hardcodeado `localhost` en código que se desplegará.
+
+REGLA 5 — MVP = MONOLITO:
+Para proyectos de un solo día o MVPs, servir frontend y backend desde el
+mismo servidor. No separar en múltiples servicios a menos que haya una
+razón técnica justificada y aprobada por el Director.
+
+REGLA 6 — AGENTE DEVOPS:
+Para proyectos que involucren despliegue en la nube (Docker, PaaS, CI/CD),
+se debe incorporar un Agente Especialista en Despliegue/Cloud (DevOps).
+No es responsabilidad del Backend Developer gestionar la infraestructura
+de deployment.
+
+REGLA 7 — VERIFICACIÓN DE DESCARGA:
+Todo mecanismo de descarga de archivos debe probarse end-to-end antes de
+aprobarse. El patrón recomendado es window.open() para archivos servidos
+desde endpoints API. Prohibido usar blob() para archivos multimedia grandes.
+
+================================================================================
+MÉTRICAS DE IMPACTO
+================================================================================
+- Commits de corrección necesarios: 4 (deberían haber sido 0)
+- Ciclos de despliegue fallidos: 3
+- Tiempo perdido en correcciones: ~45 minutos
+- Confianza del Director afectada: SÍ
+- Errores que debieron detectarse en revisión de código: 8 de 8 (100%)
+
+================================================================================
+COMPROMISO
+================================================================================
+Como Agente Senior, me comprometo a implementar las 7 nuevas reglas documentadas
+arriba en todos los proyectos futuros del sistema MAPO. Ningún proyecto será
+declarado "Aprobado" sin evidencia verificable de funcionamiento.
+
+Firmado: Agente Senior — MAPO
+Fecha: 2026-03-18

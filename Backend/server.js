@@ -28,21 +28,28 @@ if (!fs.existsSync(TEMP_DIR)) {
 // Format selector for yt-dlp (max 720p, prefer mp4)
 const FORMAT_SELECTOR = 'best[ext=mp4][height<=720]/best[ext=mp4]/best[height<=720]/best';
 
-// FFmpeg configuration for WhatsApp-compatible MP4
-const FFMPEG_ARGS = [
-  '-i', 'pipe:0',
-  '-c:v', 'libx264',
-  '-preset', 'veryfast',
-  '-crf', '23',
-  '-pix_fmt', 'yuv420p',
-  '-profile:v', 'baseline',
-  '-level', '3.1',
-  '-c:a', 'aac',
-  '-b:a', '128k',
-  '-ac', '2',
-  '-movflags', '+faststart',
-  '-y'
-];
+// Binary paths (absolute for Docker/Alpine)
+const FFMPEG_BIN = process.env.FFMPEG_PATH || '/usr/bin/ffmpeg';
+const YTDLP_BIN = process.env.YTDLP_PATH || '/usr/local/bin/yt-dlp';
+
+// Build ffmpeg args for WhatsApp-compatible MP4 (output file passed at call time)
+function buildFfmpegArgs(outputFile) {
+  return [
+    '-i', 'pipe:0',
+    '-c:v', 'libx264',
+    '-preset', 'veryfast',
+    '-crf', '23',
+    '-pix_fmt', 'yuv420p',
+    '-profile:v', 'baseline',
+    '-level', '3.1',
+    '-c:a', 'aac',
+    '-b:a', '128k',
+    '-ac', '2',
+    '-movflags', '+faststart',
+    '-y',
+    outputFile   // ← CRITICAL: ffmpeg must know where to write the output
+  ];
+}
 
 /**
  * Helper function to clean up temp files
@@ -232,7 +239,7 @@ app.get('/api/download', (req, res) => {
   };
 
   // Start yt-dlp to download video to stdout
-  ytDlp = spawn('yt-dlp', [
+  ytDlp = spawn(YTDLP_BIN, [
     '-f', FORMAT_SELECTOR,
     '--no-playlist',
     '--no-warnings',
@@ -240,9 +247,8 @@ app.get('/api/download', (req, res) => {
     url
   ]);
 
-  // Start ffmpeg to transcode (use absolute path for Docker/Alpine Linux)
-  const FFMPEG_BIN = process.env.FFMPEG_PATH || '/usr/bin/ffmpeg';
-  ffmpeg = spawn(FFMPEG_BIN, FFMPEG_ARGS);
+  // Start ffmpeg: reads from yt-dlp via stdin, writes converted MP4 to tempFile
+  ffmpeg = spawn(FFMPEG_BIN, buildFfmpegArgs(tempFile));
 
   // Pipe yt-dlp stdout to ffmpeg stdin
   ytDlp.stdout.pipe(ffmpeg.stdin);
