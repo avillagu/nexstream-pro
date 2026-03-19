@@ -234,8 +234,9 @@ app.get('/api/download', (req, res) => {
     url
   ]);
 
-  // Start ffmpeg to transcode
-  ffmpeg = spawn('ffmpeg', FFMPEG_ARGS);
+  // Start ffmpeg to transcode (using absolute path if necessary)
+  const FFMPEG_BIN = 'ffmpeg';
+  ffmpeg = spawn(FFMPEG_BIN, FFMPEG_ARGS);
 
   // Pipe yt-dlp stdout to ffmpeg stdin
   ytDlp.stdout.pipe(ffmpeg.stdin);

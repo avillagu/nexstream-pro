@@ -1,13 +1,19 @@
 FROM node:18-alpine
 
-# Install Python 3, yt-dlp, ffmpeg and curl
+# Install Python 3, ffmpeg, curl and ca-certificates
 RUN apk add --no-cache \
     python3 \
-    py3-pip \
     ffmpeg \
     curl \
-    && pip3 install --break-system-packages yt-dlp \
-    && ln -sf python3 /usr/bin/python
+    ca-certificates
+
+# Install yt-dlp binary directly (often more stable in Alpine)
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod a+rx /usr/local/bin/yt-dlp && \
+    ln -sf /usr/local/bin/yt-dlp /usr/bin/yt-dlp
+
+# Verify installations
+RUN ffmpeg -version && yt-dlp --version
 
 # Set working directory
 WORKDIR /app
