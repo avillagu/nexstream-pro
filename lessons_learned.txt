@@ -235,33 +235,35 @@ Firmado: Agente Senior — MAPO
 Fecha: 2026-03-18
 
 ================================================================================
-AUDITORÍA EXTERNA (OPORTUNIDADES DE MEJORA PENDIENTES)
+AUDITORÍA EXTERNA: OPORTUNIDADES DE MEJORA UNIVERSALES (APLICABLE A TODO PROYECTO MAPO)
 ================================================================================
-Una auditoría final reveló mejoras significativas que deben considerarse en 
-futuras iteraciones del código para garantizar una robustez de producción total:
+La auditoría final detectó brechas de diseño que reflejan omisiones arquitectónicas
+sistémicas aplicables a cualquier proyecto de software, no solo video:
 
-1. Fallback a Re-encoding (COMPATIBILIDAD WHATSAPP): 
-   El cambio a "stream copy" es veloz pero riesgoso. Si yt-dlp descarga un video
-   en formato VP9/Opus (WebM) o HEVC (H.265), "copy" creará un MP4 que NO será 
-   reproducible en WhatsApp.
-   -> Acción futura: El backend requiere lógica condicional. Si la información del
-      video indica vcodec distinto a 'h264' o 'avc', se DEBE hacer fallback al 
-      re-encode original (libx264).
+1. Fallbacks Condicionales y Degración Elegante (Graceful Degradation):
+   - Error detectado: La optimización hiper-rápida asume condiciones ideales continuas
+     (entradas 100% compatibles). Si no lo encuentra, falla irremediablemente.
+   - Lección Universal: Toda optimización de "Happy Path" debe tener un resguardo (Fallback) 
+     estructurado. Si las precondiciones estables no se cumplen, el sistema debe caer 
+     a un método más lento/pesado pero 100% confiable, en lugar de romper el servicio final.
 
-2. Infraestructura y Prevención de Abusos:
-   - Rate limiting: (Prioridad Alta) Necesario para evitar abusos del ancho de 
-     banda gratuito del proyecto. 
-   - UptimeRobot: (Prioridad Alta) Configurar pinging recurrente para evitar la
-     hibernación de capas gratuitas en Render.
+2. Resiliencia de Recursos, Costes y Control de Abusos:
+   - Error detectado: API pública expuesta infinitamente a request largos.
+   - Lección Universal: Rate Limiting OBLIGATORIO en endpoints y validación de Payload
+     Size para evitar colapso de capa Free-tier/Low-Tier de infraestructura (DoS accidental o malicioso).
+   - Lección Universal: Las mitigaciones tipo "Anti-Hibernación" (UptimeRobot) se deben
+     planificar desde inicio en plataformas PaaS Gratuitas.
 
-3. Mantenimiento del Servidor:
-   - Cleanup riguroso: Manejar escenarios donde ocurre timeout o error del 
-     proceso de transcodificación, para evitar archivos "huérfanos".
-   - Timeout explícito: Añadir timeout de seguridad a yt-dlp.
+3. Control de Tiempos y Cierre Atómico de Tareas Continuas:
+   - Error detectado: Archivos "Huérfanos" y procesos largos ahogados sin abort signal.
+   - Lección Universal: NUNCA correr subprocessos o peticiones I/O sin un control de vida 
+     explícito (Timeout). Todo recurso generado en memoria o disco debe llevar un wrapper 
+     de limpieza (`try...finally`) por seguridad, impidiendo fugas de estado/memoria (Leaks).
 
-4. Calidad General:
-   - Logging estructurado para facilitar diagnósticos en la nube.
-   - Tests automatizados.
+4. Bases de Observabilidad en Fase Temprana:
+   - Lección Universal: Un proyecto no es maduro por su UI, sino por incluir Tests 
+     automatizados end-to-end, CI integrado en releases, y Logging JSON Estructurado para 
+     facilitar el debug del sistema distribuido a los Agentes Analistas a posteriori.
 
 ================================================================================
 CIERRE OFICIAL DEL PROYECTO
