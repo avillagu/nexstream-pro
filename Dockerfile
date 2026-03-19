@@ -13,13 +13,13 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY Backend/package*.json ./
 
 # Install dependencies
 RUN npm install --production
 
 # Copy application code
-COPY server.js ./
+COPY Backend/server.js ./
 
 # Create temp directory
 RUN mkdir -p /app/temp
