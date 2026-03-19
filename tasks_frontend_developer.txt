@@ -1,0 +1,98 @@
+TAREAS — FRONTEND DEVELOPER — NEXSTREAM PRO
+
+TAREA 1: DISEÑO DEL SISTEMA VISUAL
+DESCRIPCIÓN: Definir variables CSS, paleta de colores y tipografía
+AGENTE RESPONSABLE: Frontend Developer
+INPUTS: Especificaciones de diseño del prompt
+OUTPUTS: CSS custom properties en :root
+PASOS:
+1. Definir variables de color (primary, accent, bg, card, text, muted)
+2. Configurar Google Fonts (Outfit)
+3. Definir gradientes y sombras
+4. Reset CSS global
+CRITERIOS DE ACEPTACIÓN: Variables CSS aplicadas consistentemente
+DEPENDENCIAS: Ninguna
+ESTADO: Pendiente
+
+---
+
+TAREA 2: IMPLEMENTAR LAYOUT Y HEADER
+DESCRIPCIÓN: Estructura base de la página con header premium
+AGENTE RESPONSABLE: Frontend Developer
+INPUTS: Especificaciones de diseño
+OUTPUTS: HTML base con header animado
+PASOS:
+1. Crear estructura HTML5 semántica
+2. Implementar fondo con gradientes radiales
+3. Crear header con logo gradient text
+4. Añadir animación fadeIn
+CRITERIOS DE ACEPTACIÓN: Header se ve premium con animación de entrada
+DEPENDENCIAS: Tarea 1
+ESTADO: Pendiente
+
+---
+
+TAREA 3: IMPLEMENTAR INPUT CON VALIDACION
+DESCRIPCIÓN: Campo de input para URL con validación y badges de plataformas
+AGENTE RESPONSABLE: Frontend Developer
+INPUTS: Lista de plataformas soportadas
+OUTPUTS: Componente de input funcional
+PASOS:
+1. Crear input con placeholder descriptivo
+2. Implementar focus glow effect
+3. Añadir botón "Analizar" con gradient
+4. Mostrar badges de plataformas soportadas
+5. Implementar validación visual de URL
+CRITERIOS DE ACEPTACIÓN: Input tiene focus effect, botón tiene hover lift
+DEPENDENCIAS: Tarea 2
+ESTADO: Pendiente
+
+---
+
+TAREA 4: IMPLEMENTAR VISTA PREVIA
+DESCRIPCIÓN: Área de preview que muestra info del video tras analizar
+AGENTE RESPONSABLE: Frontend Developer
+INPUTS: Formato de respuesta de GET /api/info
+OUTPUTS: Componente de vista previa animado
+PASOS:
+1. Crear grid de 2 columnas (thumb + detalles)
+2. Implementar thumbnail con badge de duración
+3. Mostrar título, plataforma, formato
+4. Añadir botón "Descargar Ahora"
+5. Animación expandDown al aparecer
+CRITERIOS DE ACEPTACIÓN: Vista previa aparece con animación y muestra datos correctos
+DEPENDENCIAS: Tareas 2, 3
+ESTADO: Pendiente
+
+---
+
+TAREA 5: IMPLEMENTAR LOGICA DE INTERACCION
+DESCRIPCIÓN: JavaScript para comunicación con API y estados de UI
+AGENTE RESPONSABLE: Frontend Developer
+INPUTS: Endpoints de API, especificaciones de interacción
+OUTPUTS: Lógica JS funcional
+PASOS:
+1. Función analizar(): fetch a /api/info, mostrar loading, llenar preview
+2. Función descargar(): redirect a /api/download, estados del botón
+3. Manejo de errores con card visual
+4. Variable API_BASE configurable
+CRITERIOS DE ACEPTACIÓN: Flujo completo funciona de extremo a extremo
+DEPENDENCIAS: Tarea 4
+ESTADO: Pendiente
+
+---
+
+TAREA 6: RESPONSIVENESS Y POLISH
+DESCRIPCIÓN: Optimizar para móvil y pulir detalles visuales
+AGENTE RESPONSABLE: Frontend Developer
+INPUTS: Especificaciones responsive
+OUTPUTS: Media queries y pulido visual
+PASOS:
+1. Media query para <600px (stack vertical)
+2. Ajustar tamaños de fuente en móvil
+3. Verificar que botones tengan tamaño táctil adecuado
+4. Revisar espaciados y alineación
+5. Añadir micro-animaciones finales
+CRITERIOS DE ACEPTACIÓN: Interfaz funciona perfectamente en móvil y desktop
+DEPENDENCIAS: Tareas 1-5
+ESTADO: Pendiente

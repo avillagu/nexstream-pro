@@ -1,0 +1,114 @@
+DISEÑO DE ARQUITECTURA — NEXSTREAM PRO
+
+DESCRIPCIÓN GENERAL:
+Webapp de descarga de videos con arquitectura cliente-servidor.
+El frontend (HTML/CSS/JS estático) se comunica con un backend API REST que
+procesa las solicitudes de descarga mediante yt-dlp y ffmpeg.
+
+COMPONENTES DEL SISTEMA:
+
+1. FRONTEND (Cliente)
+   - Aplicación web estática (HTML5 + CSS3 + JavaScript vanilla)
+   - Responsable de: UI, validación de URLs, comunicación con API
+   - Desplegado en: Vercel (CDN global, gratuito)
+
+2. BACKEND (Servidor API)
+   - Node.js + Express
+   - Endpoints REST:
+     * GET /api/ping → Health check / anti-hibernación
+     * GET /api/info?url=<URL> → Extrae metadatos del video via yt-dlp
+     * GET /api/download?url=<URL> → Descarga, convierte y transmite el video
+     * GET /api/proxy-thumb?url=<URL> → Proxy para thumbnails (evita CORS)
+   - Desplegado en: Render (Docker, free tier)
+
+3. MOTOR DE DESCARGA (yt-dlp)
+   - Herramienta CLI que soporta 1000+ sitios
+   - Usado para: extracción de metadatos y descarga de streams
+   - Selector de formato: best[ext=mp4][height<=720]/best[ext=mp4]/best
+
+4. PROCESADOR DE VIDEO (ffmpeg)
+   - Transcodificación a H.264/AAC
+   - Configuración:
+     * Video: libx264, preset veryfast, CRF 23, profile baseline, level 3.1
+     * Audio: AAC, 128kbps, stereo
+     * Flag: movflags +faststart (moov atom al inicio)
+
+5. CONTENEDOR (Docker)
+   - Base: node:18-alpine
+   - Incluye: python3, yt-dlp, ffmpeg, Node.js
+   - Optimizado para Render free tier
+
+FLUJO DE DATOS:
+
+1. Usuario pega URL en el frontend
+2. Frontend valida formato de URL
+3. Frontend envía GET /api/info?url=<URL> al backend
+4. Backend ejecuta yt-dlp --dump-json para extraer metadatos
+5. Backend retorna JSON con: título, thumbnail, duración, plataforma
+6. Frontend muestra vista previa con la información
+7. Usuario hace clic en "Descargar"
+8. Frontend redirige a GET /api/download?url=<URL>
+9. Backend ejecuta pipeline: yt-dlp (descarga) | ffmpeg (conversión)
+10. ffmpeg escribe MP4 temporal con faststart
+11. Backend envía el archivo MP4 al cliente via streaming
+12. Backend limpia archivo temporal
+
+TECNOLOGÍAS:
+- Lenguajes: JavaScript (Node.js), HTML5, CSS3
+- Frameworks: Express.js
+- Herramientas: yt-dlp, ffmpeg
+- Infraestructura: Docker, Render, Vercel
+- Monitoreo: UptimeRobot
+- Fuentes: Google Fonts (Outfit)
+
+INTEGRACIONES:
+- yt-dlp ↔ ffmpeg: pipe via stdin/stdout
+- Frontend ↔ Backend: API REST via HTTPS
+- UptimeRobot → Backend: ping periódico
+
+ESCALABILIDAD:
+- Frontend en CDN (Vercel) escala automáticamente
+- Backend: Docker permite migrar a cualquier PaaS/VPS
+- Arquitectura stateless: cada request es independiente
+
+SEGURIDAD:
+- No se almacenan videos permanentemente
+- Archivos temporales se eliminan automáticamente
+- CORS configurado para el dominio del frontend
+- Sin autenticación requerida (herramienta pública)
+- No se almacenan datos de usuario
+
+DECISIONES CLAVE:
+
+1. Vanilla JS en vez de React/Vue:
+   JUSTIFICACIÓN: Es una SPA simple con un solo flujo. Un framework añadiría
+   complejidad sin beneficio real. HTML+CSS+JS es más rápido de desarrollar,
+   más ligero, y se despliega trivialmente en Vercel.
+
+2. yt-dlp en vez de APIs directas:
+   JUSTIFICACIÓN: Soporta las 4 plataformas con una sola herramienta.
+   Se actualiza frecuentemente. Evita mantener parsers individuales.
+
+3. ffmpeg para transcodificación:
+   JUSTIFICACIÓN: Garantiza formato MP4 compatible universal (WhatsApp).
+   Sin ffmpeg, algunos videos serían incompatibles.
+
+4. Archivo temporal en vez de streaming directo:
+   JUSTIFICACIÓN: WhatsApp rechaza MP4 fragmentados (empty_moov).
+   Generar archivo temporal con faststart garantiza compatibilidad.
+
+5. Resolución máxima 720p:
+   JUSTIFICACIÓN: Balance entre calidad y velocidad de descarga.
+   Videos 720p se comparten bien por WhatsApp sin exceder límites de tamaño.
+
+RIESGOS TÉCNICOS:
+1. Hibernación de Render free tier → UptimeRobot mitiga
+2. Timeout en videos largos → Límite de resolución y manejo de errores
+3. Cambios en plataformas → yt-dlp se actualiza en cada build de Docker
+4. CORS con thumbnails → Endpoint proxy dedicado
+
+DEPENDENCIAS ENTRE COMPONENTES:
+- Frontend depende de Backend para toda funcionalidad
+- Backend depende de yt-dlp y ffmpeg (instalados via Docker)
+- Deploy de Backend depende de Dockerfile
+- UptimeRobot depende de endpoint /api/ping

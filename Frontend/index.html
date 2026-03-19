@@ -1,0 +1,480 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexStream Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --accent: #a855f7;
+      --bg: #0f172a;
+      --card: rgba(30, 41, 59, 0.7);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius-lg: 28px;
+      --radius-sm: 18px;
+      --shadow-strong: 0 25px 80px rgba(99, 102, 241, 0.25), 0 10px 30px rgba(168, 85, 247, 0.2);
+      --glass-blur: blur(18px);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(99,102,241,0.15), transparent 25%),
+                  radial-gradient(circle at 80% 10%, rgba(168,85,247,0.18), transparent 25%),
+                  radial-gradient(circle at 70% 80%, rgba(56,189,248,0.15), transparent 22%),
+                  var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 18px 48px;
+      animation: fadeIn 0.9s ease;
+    }
+
+    .shell {
+      width: min(1100px, 100%);
+      display: grid;
+      gap: 22px;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 4px;
+    }
+
+    .logo {
+      font-size: clamp(32px, 4vw, 42px);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 0.4px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-strong);
+      backdrop-filter: var(--glass-blur);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.1));
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .card-content { position: relative; z-index: 1; }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    input[type="url"] {
+      flex: 1;
+      min-width: 240px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1.5px solid rgba(148, 163, 184, 0.28);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 16px;
+      outline: none;
+      transition: border 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    input[type="url"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.25), 0 20px 45px rgba(99,102,241,0.25);
+      transform: translateY(-1px);
+    }
+    input.valid { border-color: var(--success); }
+    input.invalid { border-color: var(--danger); }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease;
+      color: #0b1020;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      padding: 14px 18px;
+      min-width: 140px;
+      box-shadow: 0 15px 40px rgba(99,102,241,0.35);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 20px 45px rgba(168,85,247,0.35); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    .badges, .meta-tags, .footer-badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .badge {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 10px 25px rgba(15,23,42,0.35);
+    }
+
+    .badge.platform { background: rgba(99,102,241,0.18); border-color: rgba(99,102,241,0.4); }
+    .badge.danger { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.3); color: #fecdd3; }
+
+    .label { color: var(--muted); font-size: 14px; margin-bottom: 6px; }
+
+    .preview {
+      display: none;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      animation: expandDown 0.6s ease forwards;
+    }
+    .preview.visible { display: grid; }
+
+    .thumb-wrap {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(148,163,184,0.15);
+    }
+    .thumb-wrap img {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+      aspect-ratio: 16 / 9;
+      transition: transform 0.5s ease;
+    }
+    .thumb-wrap:hover img { transform: scale(1.02); }
+
+    .duration {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(15,23,42,0.8);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 6px 0;
+    }
+
+    .error-card {
+      margin-top: 10px;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      background: rgba(239,68,68,0.14);
+      border: 1px solid rgba(239,68,68,0.35);
+      color: #fecdd3;
+      display: none;
+      animation: shake 0.4s ease;
+    }
+    .error-card.visible { display: block; }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 4px 0;
+      color: var(--muted);
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity:1; transform: none; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes expandDown { from { opacity: 0; transform: translateY(-6px) scale(0.98);} to { opacity: 1; transform: none; } }
+    @keyframes shake { 10%, 90% { transform: translateX(-1px);} 20%, 80% { transform: translateX(2px);} 30%, 50%, 70% { transform: translateX(-4px);} 40%, 60% { transform: translateX(4px);} }
+
+    @media (min-width: 760px) {
+      .preview { grid-template-columns: 1.4fr 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 22px 14px 36px; }
+      .input-row { flex-direction: column; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <div class="logo">NexStream</div>
+        <div class="subtitle">Descarga premium con un clic</div>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="label">Pega la URL del video</div>
+        <div class="input-row">
+          <input id="urlInput" type="url" placeholder="https://" autocomplete="off" spellcheck="false">
+          <button id="analyzeBtn">
+            <span class="btn-text">Analizar</span>
+            <div class="spinner" id="analyzeSpinner" style="display:none"></div>
+          </button>
+        </div>
+        <div class="badges" aria-label="Plataformas soportadas">
+          <div class="badge platform" data-platform="YouTube">🔴 YouTube</div>
+          <div class="badge platform" data-platform="Facebook">📘 Facebook</div>
+          <div class="badge platform" data-platform="Instagram">📸 Instagram</div>
+          <div class="badge platform" data-platform="TikTok">🎵 TikTok</div>
+        </div>
+        <div id="errorCard" class="error-card"></div>
+      </div>
+    </div>
+
+    <div id="previewCard" class="card preview">
+      <div class="card-content">
+        <div class="thumb-wrap">
+          <img id="thumbnail" alt="Vista previa del video">
+          <div id="duration" class="duration">--:--</div>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="badge platform" id="platformBadge">Plataforma</div>
+        <div class="title" id="title">Título del video</div>
+        <div class="meta-tags">
+          <div class="badge" id="formatTag">Formato: MP4</div>
+          <div class="badge" id="qualityTag">Calidad: HD</div>
+        </div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="downloadBtn" style="flex:1; min-width:180px;">
+            <span id="downloadText">Descargar Ahora</span>
+            <div class="spinner" id="downloadSpinner" style="display:none"></div>
+          </button>
+          <div class="badge" id="statusBadge" style="background: rgba(16,185,129,0.16); border-color: rgba(16,185,129,0.4); color:#bbf7d0;">Listo</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-badges">
+        <div class="badge">⚡ Rápido</div>
+        <div class="badge">🛡️ Seguro</div>
+        <div class="badge">♾️ Ilimitado</div>
+      </div>
+      <div class="badge" style="background:rgba(255,255,255,0.04);">NexStream Pro · MAPO</div>
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000'; // Cambiar a URL de Render en producción
+
+    const urlInput = document.getElementById('urlInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const analyzeSpinner = document.getElementById('analyzeSpinner');
+    const previewCard = document.getElementById('previewCard');
+    const errorCard = document.getElementById('errorCard');
+    const titleEl = document.getElementById('title');
+    const thumbEl = document.getElementById('thumbnail');
+    const durationEl = document.getElementById('duration');
+    const platformBadge = document.getElementById('platformBadge');
+    const formatTag = document.getElementById('formatTag');
+    const qualityTag = document.getElementById('qualityTag');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const downloadText = document.getElementById('downloadText');
+    const downloadSpinner = document.getElementById('downloadSpinner');
+    const statusBadge = document.getElementById('statusBadge');
+
+    const platformMatch = (url) => {
+      if (!url) return null;
+      if (/youtube\.com|youtu\.be/.test(url)) return 'YouTube';
+      if (/tiktok\.com/.test(url)) return 'TikTok';
+      if (/instagram\.com/.test(url)) return 'Instagram';
+      if (/facebook\.com|fb\.watch/.test(url)) return 'Facebook';
+      return 'Desconocida';
+    };
+
+    const validateUrl = (value) => {
+      try {
+        const u = new URL(value);
+        return ['http:', 'https:'].includes(u.protocol);
+      } catch (e) { return false; }
+    };
+
+    const setError = (msg) => {
+      errorCard.textContent = msg;
+      errorCard.classList.add('visible');
+      setTimeout(() => errorCard.classList.remove('visible'), 3600);
+    };
+
+    const setAnalyzeState = (loading) => {
+      analyzeBtn.disabled = loading;
+      analyzeSpinner.style.display = loading ? 'block' : 'none';
+    };
+
+    const setDownloadState = (state) => {
+      // states: idle, preparing, downloading
+      if (state === 'preparing') {
+        downloadText.textContent = 'Preparando...';
+        downloadSpinner.style.display = 'block';
+        downloadBtn.disabled = true;
+        statusBadge.textContent = 'Preparando';
+        statusBadge.style.background = 'rgba(99,102,241,0.16)';
+        statusBadge.style.borderColor = 'rgba(99,102,241,0.4)';
+      } else if (state === 'downloading') {
+        downloadText.textContent = 'Descargando...';
+        downloadSpinner.style.display = 'block';
+        downloadBtn.disabled = true;
+        statusBadge.textContent = 'Descargando';
+        statusBadge.style.background = 'rgba(168,85,247,0.18)';
+        statusBadge.style.borderColor = 'rgba(168,85,247,0.4)';
+      } else {
+        downloadText.textContent = 'Descargar Ahora';
+        downloadSpinner.style.display = 'none';
+        downloadBtn.disabled = false;
+        statusBadge.textContent = 'Listo';
+        statusBadge.style.background = 'rgba(16,185,129,0.16)';
+        statusBadge.style.borderColor = 'rgba(16,185,129,0.4)';
+      }
+    };
+
+    const showPreview = (data, url) => {
+      titleEl.textContent = data.title || 'Video listo';
+      const thumbUrl = `${API_BASE}/api/proxy-thumb?url=${encodeURIComponent(data.thumbnail || url)}`;
+      thumbEl.src = thumbUrl;
+      thumbEl.alt = data.title || 'Vista previa';
+      durationEl.textContent = data.duration || '—';
+      platformBadge.textContent = data.platform || platformMatch(url) || 'Plataforma';
+      formatTag.textContent = 'Formato: MP4';
+      qualityTag.textContent = 'Calidad: HD';
+      previewCard.classList.add('visible');
+    };
+
+    const analyze = async () => {
+      const url = urlInput.value.trim();
+      const isValid = validateUrl(url);
+      urlInput.classList.toggle('valid', isValid);
+      urlInput.classList.toggle('invalid', !isValid && url.length > 0);
+      errorCard.classList.remove('visible');
+      if (!isValid) {
+        setError('Introduce una URL válida.');
+        return;
+      }
+      setAnalyzeState(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/info?url=${encodeURIComponent(url)}`);
+        if (!res.ok) throw new Error('No se pudo analizar el video');
+        const data = await res.json();
+        showPreview(data, url);
+        setDownloadState('idle');
+      } catch (err) {
+        setError(err.message || 'Error al analizar');
+      } finally {
+        setAnalyzeState(false);
+      }
+    };
+
+    const download = () => {
+      const url = urlInput.value.trim();
+      const isValid = validateUrl(url);
+      if (!isValid) return setError('URL inv?lida. Analiza primero.');
+
+      // Descarga directa para evitar cargar el blob completo en memoria (mejor en m?viles)
+      setDownloadState('preparing');
+      const downloadUrl = `${API_BASE}/api/download?url=${encodeURIComponent(url)}`;
+
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.download = `${titleEl.textContent || 'video'}.mp4`;
+      document.body.appendChild(link);
+
+      setDownloadState('downloading');
+      link.click();
+
+      // Limpieza r?pida y retorno al estado listo sin esperar al cierre de la pesta?a
+      requestAnimationFrame(() => {
+        link.remove();
+        setDownloadState('idle');
+      });
+    };
+
+    urlInput.addEventListener('input', (e) => {
+      const value = e.target.value.trim();
+      const isValid = validateUrl(value);
+      urlInput.classList.toggle('valid', isValid);
+      urlInput.classList.toggle('invalid', !isValid && value.length > 0);
+      const platform = platformMatch(value);
+      platformBadge.textContent = platform || 'Plataforma';
+    });
+
+    analyzeBtn.addEventListener('click', analyze);
+    downloadBtn.addEventListener('click', download);
+    urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') analyze(); });
+
+    // Autofocus on load for quick paste
+    window.addEventListener('DOMContentLoaded', () => {
+      urlInput.focus({ preventScroll: true });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+PROMPT — FRONTEND DEVELOPER — NEXSTREAM PRO
+
+ROL:
+Eres el Frontend Developer del proyecto NexStream Pro en el sistema MAPO.
+Tu función es construir una interfaz web profesional y premium para la
+descarga de videos.
+
+OBJETIVO:
+Crear una interfaz moderna, responsive y visualmente impactante que permita
+al usuario pegar un enlace de video, ver una vista previa y descargarlo.
+
+DISEÑO VISUAL:
+- Tema: Dark mode con glassmorphism
+- Paleta de colores:
+  * Primary: #6366f1 (Indigo)
+  * Accent: #a855f7 (Purple)
+  * Background: #0f172a (Dark slate)
+  * Cards: rgba(30, 41, 59, 0.7) con backdrop-filter blur
+  * Text: #f8fafc (White)
+  * Muted: #94a3b8 (Slate)
+- Fuente: Google Fonts "Outfit" (pesos: 300, 400, 600, 800)
+- Bordes redondeados: 18px-32px
+- Gradientes: linear-gradient(135deg, #6366f1, #a855f7)
+- Sombras: profundas, coloreadas
+
+ESTRUCTURA HTML:
+1. Header: Logo "NexStream" con texto gradiente + subtítulo
+2. Card principal:
+   a. Input de URL con validación visual
+   b. Botón "Analizar" con loading state
+   c. Badges de plataformas soportadas (YouTube, Facebook, Instagram, TikTok)
+3. Área de vista previa (aparece tras analizar):
+   a. Thumbnail del video con badge de duración
+   b. Título del video
+   c. Tags de metadatos (plataforma, formato)
+   d. Botón "Descargar Ahora" con estados
+4. Mensajes de error (card roja con animación)
+5. Footer con badges (Rápido, Seguro, Ilimitado)
+
+INTERACTIVIDAD:
+- Animación fadeIn al cargar la página
+- Input con focus effect (glow indigo)
+- Botón con hover lift + shadow
+- Vista previa con animación expandDown
+- Loading spinner durante análisis
+- Estados del botón de descarga: normal → preparando → descargando
+- Detección automática de plataforma al pegar URL
+- Validación visual de URL
+
+API ENDPOINTS (del Backend):
+- GET /api/info?url=<URL> → { title, thumbnail, duration, platform }
+- GET /api/download?url=<URL> → Stream MP4
+- GET /api/proxy-thumb?url=<URL> → Imagen proxy
+
+VARIABLE CONFIGURABLE:
+const API_BASE = 'http://localhost:3000'; // Cambiar a URL de Render en producción
+
+ARCHIVOS A CREAR:
+1. Frontend/index.html (todo integrado: HTML + CSS + JS)
+
+RESPONSIVENESS:
+- Desktop: grid 2 columnas para vista previa
+- Mobile (<600px): stack vertical, input full width, botones full width
+
+RESTRICCIONES:
+- No uses frameworks (vanilla HTML/CSS/JS)
+- No modifiques archivos fuera del directorio Frontend/
+- Todo debe ir en un solo archivo index.html
+- No uses librerías externas excepto Google Fonts
+- La URL del backend debe ser una variable configurable
+
+CRITERIOS DE ACEPTACIÓN:
+- La interfaz se ve premium y profesional a primera vista
+- Es responsive en móvil y desktop
+- El botón "Analizar" muestra loading state
+- La vista previa aparece con animación
+- Los errores se muestran claramente
+- El botón de descarga funciona correctamente
+- Los iconos/badges de plataformas son visibles

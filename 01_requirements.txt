@@ -1,0 +1,40 @@
+REQUERIMIENTOS DEL PROYECTO — NEXSTREAM PRO
+
+REQUERIMIENTOS FUNCIONALES:
+
+RF01 — El usuario puede pegar un enlace de video (YouTube, Facebook, Instagram, TikTok)
+RF02 — El sistema valida que el enlace sea de una plataforma soportada
+RF03 — El sistema extrae información del video (título, thumbnail, duración, plataforma)
+RF04 — El sistema muestra una vista previa del video con la información extraída
+RF05 — El usuario puede iniciar la descarga con un solo clic
+RF06 — El sistema descarga y convierte el video a MP4 (H.264 + AAC) compatible con WhatsApp
+RF07 — El video descargado incluye moov atom al inicio (faststart) para reproducción inmediata
+RF08 — El sistema muestra progreso/estado durante la descarga
+RF09 — El sistema maneja errores y muestra mensajes claros al usuario
+RF10 — La interfaz es responsive (funciona en móvil y desktop)
+
+REQUERIMIENTOS NO FUNCIONALES:
+
+RNF01 — RENDIMIENTO: La extracción de info debe completarse en menos de 10 segundos
+RNF02 — RENDIMIENTO: La descarga debe iniciar streaming en menos de 15 segundos
+RNF03 — COMPATIBILIDAD: Video de salida reproducible en todos los dispositivos modernos
+RNF04 — COMPATIBILIDAD: Video compartible vía WhatsApp sin problemas
+RNF05 — SEGURIDAD: No almacenamiento permanente de videos en el servidor
+RNF06 — SEGURIDAD: Limpieza automática de archivos temporales
+RNF07 — DISPONIBILIDAD: Backend con mecanismo anti-hibernación (para Render free tier)
+RNF08 — UX: Interfaz profesional, moderna, con animaciones y diseño premium
+RNF09 — COSTO: $0 en infraestructura y tecnologías
+RNF10 — MANTENIBILIDAD: Código limpio, modular y documentado
+
+PLATAFORMAS SOPORTADAS:
+1. YouTube (incluyendo YouTube Shorts)
+2. Facebook (videos públicos)
+3. Instagram (Reels y publicaciones)
+4. TikTok (con y sin marca de agua)
+
+FORMATO DE SALIDA:
+- Contenedor: MP4
+- Video codec: H.264 (libx264), profile baseline, level 3.1
+- Audio codec: AAC, 128kbps, stereo
+- Resolución: Hasta 720p (balance calidad/velocidad)
+- Flag: movflags +faststart

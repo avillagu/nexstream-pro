@@ -1,0 +1,82 @@
+CONTRATO DE PROYECTO
+
+NOMBRE DEL PROYECTO: NexStream Pro — Video Downloader Webapp
+
+OBJETIVO GENERAL:
+Desarrollar una webapp completa, optimizada y profesional para descargar videos de
+YouTube, Facebook, Instagram y TikTok en formato MP4 compatible con WhatsApp.
+
+PROBLEMA A RESOLVER:
+Los usuarios necesitan una herramienta gratuita, rápida y sin publicidad para descargar
+videos de redes sociales en un formato que puedan compartir fácilmente por WhatsApp
+sin problemas de reproducción.
+
+ALCANCE:
+- Qué incluye:
+  * Backend con API REST para extracción de info y descarga de videos
+  * Procesamiento de video en servidor (yt-dlp + ffmpeg)
+  * Frontend profesional con diseño premium
+  * Soporte para 4 plataformas: YouTube, Facebook, Instagram, TikTok
+  * Conversión automática a formato WhatsApp-compatible
+  * Diseño responsive (mobile + desktop)
+  * Despliegue en servicios gratuitos (Render + Vercel)
+  * Docker para el backend
+
+- Qué NO incluye:
+  * Descarga de audio solamente (solo video)
+  * Registro de usuarios / autenticación
+  * Historial de descargas
+  * Descarga por lotes (batch)
+  * Plataformas adicionales más allá de las 4 definidas
+
+REQUERIMIENTOS FUNCIONALES:
+1. Pegar enlace y obtener vista previa del video
+2. Descargar video en MP4 H.264/AAC con un clic
+3. Formato compatible con WhatsApp (faststart + profile baseline)
+4. Manejo de errores con mensajes claros
+5. Interfaz responsive y profesional
+
+REQUERIMIENTOS NO FUNCIONALES:
+- Performance: Info <10s, descarga inicia <15s
+- Seguridad: Sin almacenamiento permanente, limpieza de temporales
+- Escalabilidad: Arquitectura lista para escalar (Docker)
+- UX: Diseño premium con animaciones y glassmorphism
+
+STACK TECNOLÓGICO PROPUESTO:
+- Backend: Node.js + Express
+- Motor de descarga: yt-dlp (CLI)
+- Procesamiento de video: ffmpeg
+- Frontend: HTML5 + CSS3 + JavaScript (vanilla)
+- Containerización: Docker (Alpine Linux)
+- Deploy Backend: Render (free tier)
+- Deploy Frontend: Vercel (free tier)
+- Monitoreo: UptimeRobot (free)
+
+ARQUITECTURA GENERAL:
+Cliente (Browser) → Frontend (Vercel) → API REST (Render/Docker) → yt-dlp → ffmpeg → Stream MP4
+
+AGENTES DEFINIDOS:
+1. Backend Developer — API REST + integración yt-dlp/ffmpeg
+2. Frontend Developer — Interfaz profesional premium
+
+CRITERIOS DE ÉXITO:
+1. Descarga exitosa de videos desde las 4 plataformas
+2. Videos reproducibles sin problemas en cualquier dispositivo
+3. Videos compartibles por WhatsApp sin errores
+4. Interfaz profesional que genere confianza al usuario
+5. Tiempo de descarga razonable (< 1 minuto para videos cortos)
+
+RIESGOS IDENTIFICADOS:
+1. Plataformas pueden bloquear o cambiar sus APIs → Mitigación: yt-dlp se actualiza frecuentemente
+2. Free tier de Render hiberna → Mitigación: UptimeRobot para ping periódico
+3. Videos largos pueden timeout → Mitigación: Límite a 720p, streaming
+4. Algunas URLs privadas no funcionarán → Mitigación: Mensaje de error claro
+
+CRONOGRAMA:
+Fecha de inicio: 2026-03-18
+Fecha de entrega: 2026-03-18 (mismo día)
+
+APROBACIÓN:
+
+APROBADO POR: Alejandro Villa
+FECHA: 18 de marzo del 2026

@@ -1,0 +1,96 @@
+TAREAS — BACKEND DEVELOPER — NEXSTREAM PRO
+
+TAREA 1: SETUP DEL PROYECTO
+DESCRIPCIÓN: Inicializar proyecto Node.js con dependencias
+AGENTE RESPONSABLE: Backend Developer
+INPUTS: Especificaciones de arquitectura
+OUTPUTS: Backend/package.json
+PASOS:
+1. Crear package.json con express y cors
+2. Configurar script de start
+CRITERIOS DE ACEPTACIÓN: npm install ejecuta sin errores
+DEPENDENCIAS: Ninguna
+ESTADO: Pendiente
+
+---
+
+TAREA 2: IMPLEMENTAR SERVIDOR EXPRESS
+DESCRIPCIÓN: Crear el servidor Express con CORS y endpoints base
+AGENTE RESPONSABLE: Backend Developer
+INPUTS: 02_architecture.txt
+OUTPUTS: Backend/server.js (base)
+PASOS:
+1. Importar dependencias
+2. Configurar Express con CORS
+3. Implementar GET /api/ping
+4. Configurar puerto 3000
+CRITERIOS DE ACEPTACIÓN: Servidor arranca y /api/ping responde 200
+DEPENDENCIAS: Tarea 1
+ESTADO: Pendiente
+
+---
+
+TAREA 3: IMPLEMENTAR PROXY DE THUMBNAILS
+DESCRIPCIÓN: Endpoint para proxy de imágenes thumbnail (evita CORS del browser)
+AGENTE RESPONSABLE: Backend Developer
+INPUTS: Arquitectura
+OUTPUTS: Endpoint GET /api/proxy-thumb
+PASOS:
+1. Recibir URL de thumbnail via query param
+2. Hacer request HTTP/HTTPS a la URL original
+3. Pipe la respuesta al cliente con headers correctos
+CRITERIOS DE ACEPTACIÓN: Thumbnails se cargan sin error CORS
+DEPENDENCIAS: Tarea 2
+ESTADO: Pendiente
+
+---
+
+TAREA 4: IMPLEMENTAR EXTRACCION DE INFO
+DESCRIPCIÓN: Endpoint que usa yt-dlp para extraer metadatos del video
+AGENTE RESPONSABLE: Backend Developer
+INPUTS: Arquitectura, formato de respuesta esperado
+OUTPUTS: Endpoint GET /api/info
+PASOS:
+1. Recibir URL via query param
+2. Ejecutar yt-dlp --dump-json --no-playlist
+3. Parsear JSON de salida
+4. Retornar: title, thumbnail, duration, platform
+CRITERIOS DE ACEPTACIÓN: Retorna JSON válido con metadatos del video
+DEPENDENCIAS: Tarea 2
+ESTADO: Pendiente
+
+---
+
+TAREA 5: IMPLEMENTAR DESCARGA Y CONVERSION
+DESCRIPCIÓN: Endpoint principal que descarga y convierte video a MP4 compatible
+AGENTE RESPONSABLE: Backend Developer
+INPUTS: Arquitectura, config de ffmpeg
+OUTPUTS: Endpoint GET /api/download
+PASOS:
+1. Recibir URL via query param
+2. Spawning yt-dlp con selector de formato 720p
+3. Pipe stdout de yt-dlp a stdin de ffmpeg
+4. ffmpeg escribe archivo temporal MP4 con faststart
+5. Enviar archivo temporal al cliente via stream
+6. Limpiar archivo temporal
+7. Manejar cierre de conexión del cliente
+CRITERIOS DE ACEPTACIÓN: Descarga MP4 reproducible compatible con WhatsApp
+DEPENDENCIAS: Tarea 2
+ESTADO: Pendiente
+
+---
+
+TAREA 6: CREAR DOCKERFILE
+DESCRIPCIÓN: Dockerfile para despliegue en Render
+AGENTE RESPONSABLE: Backend Developer
+INPUTS: Arquitectura, dependencias del sistema
+OUTPUTS: Backend/Dockerfile
+PASOS:
+1. Base node:18-alpine
+2. Instalar python3, pip, ffmpeg, curl, ca-certificates
+3. Instalar yt-dlp desde GitHub
+4. Copiar y build del proyecto Node.js
+5. Exponer puerto 3000
+CRITERIOS DE ACEPTACIÓN: docker build ejecuta sin errores
+DEPENDENCIAS: Tareas 1-5
+ESTADO: Pendiente

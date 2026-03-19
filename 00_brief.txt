@@ -1,0 +1,37 @@
+BRIEF DEL PROYECTO — NEXSTREAM PRO
+
+FECHA: 2026-03-18
+SOLICITADO POR: Director
+
+DESCRIPCIÓN:
+Webapp profesional para descarga de videos desde Facebook, Instagram, YouTube y TikTok.
+Los videos descargados deben ser reproducibles sin problemas y en formato compatible
+para compartir vía WhatsApp (MP4 H.264/AAC con moov atom).
+
+CONTEXTO:
+Existe un proyecto previo funcional (video-downloader / NexStream) que demostró la
+viabilidad técnica del enfoque yt-dlp + ffmpeg + Node.js. Este nuevo proyecto toma
+las lecciones aprendidas y construye una versión mejorada, optimizada y con estética
+profesional premium.
+
+OBJETIVO DE NEGOCIO:
+Proporcionar a usuarios comunes una herramienta gratuita, rápida y sin publicidad para
+descargar videos de las principales plataformas sociales en formato listo para compartir.
+
+USUARIOS FINALES:
+Usuarios comunes (no corporativo). Perfil: personas que quieren descargar videos de
+redes sociales para uso personal y compartir por WhatsApp.
+
+RESTRICCIONES:
+- Presupuesto: $0 (solo tecnologías gratuitas/open-source)
+- Tiempo: Completar hoy (2026-03-18)
+- Formato de salida: MP4 compatible con WhatsApp
+- Sin publicidad
+
+NIVEL DE COMPLEJIDAD:
+Medio — Webapp completa con backend (procesamiento de video) y frontend profesional.
+
+PRIORIDADES:
+1. Funcionalidad completa y confiable
+2. Velocidad de descarga
+3. Estética profesional (no sacrificada)
