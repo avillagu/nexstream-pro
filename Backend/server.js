@@ -25,29 +25,24 @@ if (!fs.existsSync(TEMP_DIR)) {
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 }
 
-// Format selector for yt-dlp (max 720p, prefer mp4)
-const FORMAT_SELECTOR = 'best[ext=mp4][height<=720]/best[ext=mp4]/best[height<=720]/best';
+// Format selector: prefer pre-encoded h264/aac mp4 to avoid re-encoding
+const FORMAT_SELECTOR = 'bestvideo[ext=mp4][vcodec^=avc][height<=720]+bestaudio[ext=m4a]/best[ext=mp4][height<=720]/best[height<=720]/best';
 
 // Binary paths (absolute for Docker/Alpine)
 const FFMPEG_BIN = process.env.FFMPEG_PATH || '/usr/bin/ffmpeg';
 const YTDLP_BIN = process.env.YTDLP_PATH || '/usr/local/bin/yt-dlp';
 
-// Build ffmpeg args for WhatsApp-compatible MP4 (output file passed at call time)
+// Build ffmpeg args — uses stream copy (no re-encoding) for speed.
+// faststart relocates the moov atom to the beginning for instant playback.
+// This is 10-50x faster than full re-encode and preserves original quality.
 function buildFfmpegArgs(outputFile) {
   return [
     '-i', 'pipe:0',
-    '-c:v', 'libx264',
-    '-preset', 'veryfast',
-    '-crf', '23',
-    '-pix_fmt', 'yuv420p',
-    '-profile:v', 'baseline',
-    '-level', '3.1',
-    '-c:a', 'aac',
-    '-b:a', '128k',
-    '-ac', '2',
-    '-movflags', '+faststart',
+    '-c:v', 'copy',      // copy video stream as-is (no re-encode)
+    '-c:a', 'copy',      // copy audio stream as-is (no re-encode)
+    '-movflags', '+faststart',  // WhatsApp/mobile compatibility
     '-y',
-    outputFile   // ← CRITICAL: ffmpeg must know where to write the output
+    outputFile
   ];
 }
 
