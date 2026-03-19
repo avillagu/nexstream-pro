@@ -235,6 +235,35 @@ Firmado: Agente Senior — MAPO
 Fecha: 2026-03-18
 
 ================================================================================
+AUDITORÍA EXTERNA (OPORTUNIDADES DE MEJORA PENDIENTES)
+================================================================================
+Una auditoría final reveló mejoras significativas que deben considerarse en 
+futuras iteraciones del código para garantizar una robustez de producción total:
+
+1. Fallback a Re-encoding (COMPATIBILIDAD WHATSAPP): 
+   El cambio a "stream copy" es veloz pero riesgoso. Si yt-dlp descarga un video
+   en formato VP9/Opus (WebM) o HEVC (H.265), "copy" creará un MP4 que NO será 
+   reproducible en WhatsApp.
+   -> Acción futura: El backend requiere lógica condicional. Si la información del
+      video indica vcodec distinto a 'h264' o 'avc', se DEBE hacer fallback al 
+      re-encode original (libx264).
+
+2. Infraestructura y Prevención de Abusos:
+   - Rate limiting: (Prioridad Alta) Necesario para evitar abusos del ancho de 
+     banda gratuito del proyecto. 
+   - UptimeRobot: (Prioridad Alta) Configurar pinging recurrente para evitar la
+     hibernación de capas gratuitas en Render.
+
+3. Mantenimiento del Servidor:
+   - Cleanup riguroso: Manejar escenarios donde ocurre timeout o error del 
+     proceso de transcodificación, para evitar archivos "huérfanos".
+   - Timeout explícito: Añadir timeout de seguridad a yt-dlp.
+
+4. Calidad General:
+   - Logging estructurado para facilitar diagnósticos en la nube.
+   - Tests automatizados.
+
+================================================================================
 CIERRE OFICIAL DEL PROYECTO
 ================================================================================
 ESTATUS FINAL: ✅ COMPLETADO Y FUNCIONANDO
